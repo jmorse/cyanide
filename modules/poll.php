@@ -40,19 +40,13 @@ class PollModule extends Module
 		$output = Output::getInstance();
 
 		$team = $input->getInput('team');
+		$team = escapeshellarg($team);
+		$s_buildCommand = "/var/www/html/ide/bin/poll.py $team"; // Deal with it
 
-		$manager = ProjectManager::getInstance();
-		$projects = $manager->listRepositories($team);
-
-		$projectRevs = array();
-		foreach ($projects as $project)
-		{
-			$repo = $manager->getMasterRepository($team, $project);
-			$projectRevs[$project] = $repo->getCurrentRevision();
-			// ensure that we release this repo before trying to grab the next
-			$repo = null;
-		}
+		$ret = proc_exec($s_buildCommand, null, null, null, False);   // SHELL SAFE
+		$projectRevs = json_decode($ret);
 
 		$output->setOutput('projects', $projectRevs);
+		$output->setOutput('faces', $projectRevs);
 	}
 }
